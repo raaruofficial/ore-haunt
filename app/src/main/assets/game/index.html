@@ -555,7 +555,7 @@ function renderTierTable(){
 <div class="fineprint" style="margin-top:8px">Payments are live — SOL, ORE or SKR, verified on-chain on this device. This build opens with everything unlocked; add <b>?tier=free</b> to the URL to preview the free experience.</div></div>
 <div class="card" style="border-color:var(--gold-line);background:linear-gradient(180deg,rgba(255,176,0,.06),transparent)"><div class="card-h"><span class="eyebrow" style="margin:0;color:var(--gold)">📡 Anomaly — members only</span><span class="tag tag-gold">$7 / day</span></div>
 <p style="color:var(--dim);font-size:14px;line-height:1.65;margin:8px 0">The anomaly radar lives above every other plan — even Lifetime doesn't include it. Pot shocks, ghost crowds, whale strikes and flooded tiles, scored and ranked.</p>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><span class="chip" style="cursor:default">🔒 100 slots / day</span><span class="chip" style="cursor:default">Enforced at launch</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><span class="chip" style="cursor:default">🔒 100 slots · rolling 24h</span><span class="chip" style="cursor:default">Capped · rolling 24h</span></div>
 <div class="fineprint" style="margin-top:10px">Preview with <b>?tier=anomaly</b>.</div></div>
 <div class="card"><div class="card-h"><span class="eyebrow" style="margin:0">FAQ</span></div><div id="faqList"></div></div>
 <div class="card" style="border-color:rgba(139,92,246,.4);box-shadow:0 0 16px rgba(139,92,246,.18)">
@@ -946,7 +946,7 @@ const TIERS={
   lifetime:{name:'Lifetime', price:'$50 once'},
   anomaly:{name:'Anomaly', price:'$7 / day'},
 };
-const ANOMALY_SLOTS=100; // slots released daily — enforced by backend at launch
+const ANOMALY_SLOTS=100; // slots capped per rolling 24h — server-side enforcement activates when the backend hosts
 // ==== Payments (Solana Pay + on-chain verification) ====
 // Set PAYMENTS.treasury to your treasury wallet address to go live.
 // Until then, checkout shows an honest "not configured" state — no fake charges.
@@ -2037,8 +2037,8 @@ function renderAnomaly(){
     +`<p style="color:var(--dim);font-size:14px;line-height:1.6;margin:0 0 14px">Pot shocks, ghost crowds, whale strikes and flooded tiles — every statistically unusual round, scored and ranked. Not even Lifetime includes this.</p>`
     +`<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">`
     +`<span class="chip" style="cursor:default;border-color:var(--gold-line);color:var(--gold)">$7 / day</span>`
-    +`<span class="chip" style="cursor:default">🔒 ${ANOMALY_SLOTS} slots / day</span></div>`
-    +`<div class="fineprint">Slots release daily and are enforced at launch. Preview with <b>?tier=anomaly</b>.</div></div>`;
+    +`<span class="chip" style="cursor:default">🔒 ${ANOMALY_SLOTS} slots · rolling 24h</span></div>`
+    +`<div class="fineprint">Capped at 100 slots per rolling 24 hours — the cap is client-side in this build; server-side enforcement activates when the backend hosts. Preview with <b>?tier=anomaly</b>.</div></div>`;
     return;
   }
   const all=AnomalyModule.signals();

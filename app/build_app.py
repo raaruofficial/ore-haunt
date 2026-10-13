@@ -44,7 +44,8 @@ for e in events:
         w["auto"] += 1
 # ---- anomaly exposure: deploy events x anomaly signals (build-time) ----
 # Mirrors AnomalyModule.detect() EXACTLY (z-scores, thresholds, severity bars) --
-# parity-verified 86/86 signals against the JS module. If detect() changes, this
+# parity-verified 86/86 signals (V3-corpus build of Oct 7; the live V4 window
+# shows 28) against the JS module. If detect() changes, this
 # must change with it. Exposure records PRESENCE only, never causation.
 import math as _math
 def _okR(r):
@@ -123,7 +124,7 @@ DATA = {"leaders": leaders, "rounds": rounds, "replays": replays,
                  "events_total": meta.get("events_total"),
                  "events_funded": meta.get("events_funded"),
                  "rounds": meta.get("rounds"),
-                 "note": "All values from ORE V3 chain state. Miner layout 752B audited; "
+                 "note": "All values from ORE V4 chain state, collected live by this project's own poller + scanner. Miner layout 752B audited; "
                          "DeployEvent 121B audited; winner=(r1^r2^r3^r4)%25 per program source."}}
 data_js = json.dumps(DATA, separators=(",", ":"))
 
@@ -131,7 +132,7 @@ html = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,interactive-widget=resizes-content">
 <title>ORE HAUNT — ORE Miner Intelligence</title>
 <style>
 /* ============ ORE HAUNT design system ============ */
@@ -247,12 +248,18 @@ nav button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .ob-nav .btn{flex:1}
 .chip b{font-variant-numeric:tabular-nums}
 /* ---------- chat ---------- */
-.chat-ch{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+#t-chat h1{font-size:var(--t-xl);margin:0 0 2px;letter-spacing:.2px}
+#t-chat>.sub{color:var(--dim);font-size:var(--t-s);margin:0 0 10px;line-height:1.45}
+.chat-note{position:relative;padding:8px 38px 8px 12px;margin:0 0 10px;font-size:11px;line-height:1.45}
+.chat-note-x{position:absolute;top:50%;right:4px;transform:translateY(-50%);width:32px;height:32px;border:none;background:none;color:var(--faint);font-size:13px;cursor:pointer}
+.chat-chwrap{position:relative}
+.chat-ch{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;align-items:center}
 .chat-ch::-webkit-scrollbar{display:none}
 .chat-ch .chip{flex:0 0 auto}
-.chat-who{font-size:12px;color:var(--dim);margin-bottom:12px}
+.chat-chwrap.more::after{content:'';position:absolute;top:0;right:0;bottom:8px;width:46px;pointer-events:none;background:linear-gradient(90deg,rgba(6,6,14,0),#07070f 85%)}
+.chat-who{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);white-space:nowrap;flex:0 0 auto;padding-left:2px}
 .chat-who b{color:var(--gold)}
-.chat-list{display:flex;flex-direction:column;gap:16px;padding-bottom:170px}
+.chat-list{display:flex;flex-direction:column;gap:16px;padding-bottom:10px}
 .chat-msg{display:flex;gap:10px;align-items:flex-start}
 .chat-msg.feed{cursor:pointer}
 .chat-av{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:var(--panel3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:19px}
@@ -262,11 +269,17 @@ nav button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .chat-name.mine{color:var(--gold)}
 .chat-name.sys{color:var(--violet,#a78bfa)}
 .chat-time{font-size:10px;color:var(--faint)}
-.chat-del{margin-left:auto;background:none;border:none;color:var(--faint);font-size:15px;cursor:pointer;padding:2px 6px;min-height:28px}
+.chat-ctl{margin-left:auto;display:flex;align-items:center;gap:2px}
+.chat-del{background:none;border:none;color:var(--faint);font-size:15px;cursor:pointer;padding:0;min-width:44px;min-height:44px;margin-top:-13px;margin-bottom:-13px;margin-right:-10px;display:inline-flex;align-items:center;justify-content:center}
+.chat-rxadd{background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--dim);border-radius:999px;font-size:13px;cursor:pointer;min-width:40px;min-height:40px;margin-top:-11px;margin-bottom:-11px;display:inline-flex;align-items:center;justify-content:center;padding:0 8px}
 .chat-txt{font-size:14px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;margin-top:2px}
-.chat-rx{display:flex;gap:6px;margin-top:6px}
-.rx-chip{border:1px solid var(--line);background:var(--panel3);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--dim);min-height:28px;font-variant-numeric:tabular-nums}
+.chat-rx{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.rx-chip{border:1px solid var(--line);background:var(--panel3);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--dim);min-height:40px;display:inline-flex;align-items:center;font-variant-numeric:tabular-nums}
 .rx-chip.on{border-color:var(--gold-line);color:var(--gold);background:var(--gold-soft)}
+.chat-err{font-size:var(--t-s);color:#ffb4b4;background:rgba(255,90,90,.08);border:1px solid rgba(255,110,110,.45);border-radius:var(--r-m);padding:10px 14px;line-height:1.55;margin-bottom:12px}
+.chat-err.hint{color:var(--dim);background:rgba(255,255,255,.03);border:1px dashed var(--line2)}
+.chat-shake{animation:chatShake .35s ease}
+@keyframes chatShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .chat-composer{position:fixed;left:0;right:0;bottom:calc(77px + env(safe-area-inset-bottom));z-index:25;display:flex;gap:8px;padding:10px 14px;background:rgba(7,7,16,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
 .chat-composer input{flex:1;background:var(--panel3);border:1px solid var(--line);border-radius:999px;padding:0 16px;color:var(--txt);font-size:16px;min-height:44px;min-width:0}
 .chat-send{flex:0 0 44px;width:44px;height:44px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1200;font-size:17px;font-weight:900;cursor:pointer}
@@ -378,45 +391,51 @@ nav button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   border-radius:var(--r-m);padding:9px 12px;margin-bottom:10px}
 .l4-timer .ic{font-size:15px;line-height:1}
 .l4-timer .tx{font-size:var(--t-xs);font-weight:800;letter-spacing:1.6px;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.l4-timer b{margin-left:auto;font-size:var(--t-s);font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.l4-timer b{margin-left:auto;font-size:var(--t-s);font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;text-transform:uppercase}
 .l4-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .l4-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--r-l);
-  padding:10px;cursor:pointer;position:relative;min-width:0;transition:transform .15s var(--ease),border-color .15s,box-shadow .15s}
+  padding:7px;cursor:pointer;position:relative;min-width:0;transition:transform .15s var(--ease),border-color .15s,box-shadow .15s}
 .l4-card:active{transform:scale(.97)}
 .l4-card.on{border-color:var(--gold-line);box-shadow:0 0 16px rgba(255,176,0,.22)}
 .l4-head{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:22px}
 .l4-round{font-size:var(--t-m);font-weight:800;font-variant-numeric:tabular-nums}
+.l4-ago{display:flex;justify-content:flex-end;margin-top:3px;line-height:1.3}
+.l4-ago .ago-el{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:var(--gold);font-variant-numeric:tabular-nums;text-transform:uppercase;white-space:nowrap}
+.rpick-ago{margin:0 1px 6px;text-align:center;line-height:1.3}
+.rpick-ago .ago-el{font-size:9px;font-weight:800;letter-spacing:.5px;color:var(--gold);font-variant-numeric:tabular-nums;text-transform:uppercase;white-space:nowrap}
 .l4-play{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--gold);background:var(--gold-soft);
   border:1px solid var(--gold-line);border-radius:999px;padding:4px 9px;white-space:nowrap}
 .l4-watch{font-size:9px;font-weight:800;letter-spacing:1px;color:#000;background:var(--gold);border-radius:999px;padding:4px 8px;white-space:nowrap}
-.l4-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:78%;margin:7px auto 5px}
+.l4-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:75%;margin:5px auto 4px}
 .l4-board .fp-tile{line-height:1.1;border-radius:7px}
 .l4-board .fp-tile .v{font-size:9px}
 .l4-win{display:flex;align-items:baseline;gap:4px;font-size:11px;white-space:nowrap;overflow:hidden}
 .l4-win .crown{font-size:11.5px}
 .l4-win b{color:var(--gold);font-weight:800}
 .l4-win span{color:var(--dim);font-variant-numeric:tabular-nums}
-.l4-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.l4-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:4px}
 .l4-stat{background:var(--panel3);border:1px solid var(--line);border-radius:var(--r-s);padding:5px 2px;text-align:center;min-width:0}
 .l4-stat .v{font-size:var(--t-s);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25}
 .l4-stat .l{font-size:7.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.3px;font-weight:700;white-space:nowrap}
-.l4-when{margin-top:5px;font-size:9.5px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.l4-when{margin-top:4px;font-size:9.5px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #topPicker{padding-bottom:24px}
 #topPicker .reel-label{scroll-margin-bottom:96px}
 @media (max-width:380px){
   #t-replay .sec-h p{display:none}
   #t-replay .sec-h .eyebrow{display:none}
   .l4-grid{gap:8px}
-  .l4-card{padding:8px}
+  .l4-card{padding:6px}
   .l4-head{min-height:19px}
-  .l4-board{gap:3px;width:76%;margin:5px auto 4px}
+  .l4-ago{margin-top:2px}
+  .l4-ago .ago-el{font-size:9px}
+  .l4-board{gap:3px;width:73%;margin:4px auto 3px}
   .l4-board .fp-tile{border-radius:6px;border-width:1.5px}
   .l4-board .fp-tile .v{font-size:8px}
   .l4-timer{padding:5px 10px;margin-bottom:8px}
   .l4-win{font-size:9.5px;gap:3px}
   .l4-win .crown{font-size:11px}
   .l4-when .l4-wd{display:none}
-  .l4-stats{display:flex;flex-wrap:wrap;gap:1px 10px;margin-top:5px;line-height:1.55}
+  .l4-stats{display:flex;flex-wrap:wrap;gap:1px 10px;margin-top:3px;line-height:1.55}
   .l4-stat{display:inline;background:none;border:none;padding:0;text-align:left;white-space:nowrap}
   .l4-stat .v{display:inline;font-size:10.5px}
   .l4-stat .l{display:inline;font-size:8px;letter-spacing:.5px}
@@ -519,11 +538,11 @@ function renderFAQ(){const fl=document.getElementById('faqList'); if(!fl) return
 const FQ=[["What is ORE?","ORE is a mineable token on Solana. Miners deploy SOL onto a 25-tile board each round; one tile wins."],
 ["How is the winner picked?","The program mixes on-chain entropy and takes it mod 25. It's random — no tile, pattern, or strategy changes the odds."],
 ["What is a deploy?","SOL committed to tiles in a round. The deploy event records SOL per square, so a deploy's total is per-square amount × squares."],
-["What does ORE HAUNT track?","The top 150 miners by SOL deployed, the last 200 rounds, and 8 full deploy-by-deploy replays — from a fixed observation window."],
+["What does ORE HAUNT track?","The top 150 miners by SOL deployed, the last 200 rounds, and 8 full deploy-by-deploy replays — collected live from ORE V4 chain state by our own poller and scanner."],
 ["Why can't it predict winners?","Because winners are random. HAUNT shows how miners behave and what rounds cost — never what will win."],
 ["What do the strategy tags mean?","🐋 Whale = top 10% by SOL. 🎯 Sniper = half or more of SOL on one tile. 🕸 Spreader = SOL spread evenly (no tile over 15%). ⚖ Balanced = in between."],
 ["What is whale pressure?","How much of a round's pot sat on a single tile — a rough read of how whale-dominated it was."],
-["Is the data live?","Not yet. This build uses a frozen observation window. Live data arrives with the paid backend."],
+["Is the data live?","Yes — this build's rounds, miners and replays were collected live from ORE V4 chain state by our own poller + scanner, then bundled into the app. It's a live-collected snapshot at build time, not a real-time stream; the header shows how old the bundled data is."],
 ["What are the plans?","Free: top-25 leaderboard, 1 replay, top-25 dossiers. Day ($1), Monthly ($5), Lifetime ($50): everything — all 150 miners, all replays, simulator, similar miners, miner compare, tax CSV."],
 ["What is the tax CSV?","A download of a miner's aggregate activity (totals + per-tile) for your records. It's window aggregates, not a full transaction history — check with your accountant."]];
 fl.innerHTML=FQ.map((q,i)=>`<div style="border-top:1px solid var(--line);padding:12px 2px">`
@@ -663,10 +682,10 @@ function renderTierTable(){
 <div class="sec-h"><div class="eyebrow">Info</div><h2>Plans &amp; methodology</h2><p>How ORE HAUNT reads the chain — and what it doesn't claim.</p></div>
 <div class="card"><div class="card-h"><span class="eyebrow" style="margin:0">Plans</span><span class="tag tag-gold" id="tierBadge">preview</span></div>
 <div id="tierTable"></div>
-<div class="fineprint" style="margin-top:8px">Payments aren't live yet — everything is unlocked in this preview build. Add <b>?tier=free</b> to the URL to preview the free experience.</div></div>
+<div class="fineprint" style="margin-top:8px">Payments are live — SOL, ORE or SKR, verified on-chain on this device. This build opens with everything unlocked; add <b>?tier=free</b> to the URL to preview the free experience.</div></div>
 <div class="card" style="border-color:var(--gold-line);background:linear-gradient(180deg,rgba(255,176,0,.06),transparent)"><div class="card-h"><span class="eyebrow" style="margin:0;color:var(--gold)">📡 Anomaly — members only</span><span class="tag tag-gold">$7 / day</span></div>
 <p style="color:var(--dim);font-size:14px;line-height:1.65;margin:8px 0">The anomaly radar lives above every other plan — even Lifetime doesn't include it. Pot shocks, ghost crowds, whale strikes and flooded tiles, scored and ranked.</p>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><span class="chip" style="cursor:default">🔒 100 slots / day</span><span class="chip" style="cursor:default">Enforced at launch</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><span class="chip" style="cursor:default">🔒 100 slots · rolling 24h</span><span class="chip" style="cursor:default">Capped · rolling 24h</span></div>
 <div class="fineprint" style="margin-top:10px">Preview with <b>?tier=anomaly</b>.</div></div>
 <div class="card"><div class="card-h"><span class="eyebrow" style="margin:0">FAQ</span></div><div id="faqList"></div></div>
 <div class="card" style="border-color:rgba(139,92,246,.4);box-shadow:0 0 16px rgba(139,92,246,.18)">
@@ -686,7 +705,7 @@ function renderTierTable(){
 </div>
 <div class="card">
 <div class="card-h"><span class="eyebrow" style="margin:0">What we estimate</span></div>
-<p class="body">Replay times are real on-chain timestamps. Dates in the round explorer are estimated from round spacing (~77.5s per round) and marked with ~. Close, not exact.</p>
+<p class="body">Replay times are real on-chain timestamps. Dates in the round explorer are estimated from round spacing (~63s per round) and marked with ~. Close, not exact.</p>
 </div>
 <div class="card">
 <div class="card-h"><span class="eyebrow" style="margin:0">Limits</span></div>
@@ -698,12 +717,12 @@ function renderTierTable(){
 <p class="eyebrow">💬 CHAT</p>
 <h1>The .skr floor</h1>
 <p class="sub">Miners talking miners. Your handle is your ghost — no wallet exposed.</p>
-<div class="note" style="margin-bottom:12px">Local preview — messages live on this device until the live backend lands. The radar channel is a read-only feed of real anomaly signals from the dataset.</div>
-<div class="chat-ch" id="chatChips"></div>
-<div class="chat-who" id="chatWho"></div>
+<div class="note chat-note" id="chatNote">Local preview · on-device only · radar: real, read-only<button class="chat-note-x" onclick="ChatModule.hideNote()" aria-label="Dismiss note">✕</button></div>
+<div class="chat-chwrap" id="chatChWrap"><div class="chat-ch" id="chatChips"></div></div>
 <div class="chat-list" id="chatList"></div>
+<div class="chat-err hidden" id="chatErr" role="alert"></div>
 <div class="chat-composer hidden" id="chatComposer">
-<input id="chatInput" type="text" maxlength="500" placeholder="Message" autocomplete="off" onkeydown="if(event.key==='Enter')ChatModule.send()">
+<input id="chatInput" type="text" placeholder="Message" autocomplete="off" oninput="ChatModule.draft()" onkeydown="if(event.key==='Enter')ChatModule.send()">
 <button class="chat-send" onclick="ChatModule.send()" aria-label="Send message">➤</button>
 </div>
 </section>
@@ -739,7 +758,7 @@ function renderTierTable(){
 <div class="ob-ic">📡</div>
 <div class="eyebrow">Go deeper</div>
 <h2 style="margin:8px 0">For the obsessed</h2>
-<p style="color:var(--dim);font-size:14px;line-height:1.7">Strategy simulator, miner compare, tax exports — and the Anomaly radar, a $7/day tier above everything else. Payments aren't live yet; everything is unlocked in this preview.</p>
+<p style="color:var(--dim);font-size:14px;line-height:1.7">Strategy simulator, miner compare, tax exports — and the Anomaly radar, a $7/day tier above everything else. Payments are live in SOL, ORE or SKR; this build opens with everything unlocked.</p>
 </div>
 <div class="ob-dots"><div class="ob-dot on"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
 <div class="ob-nav">
@@ -1057,7 +1076,7 @@ const TIERS={
   lifetime:{name:'Lifetime', price:'$50 once'},
   anomaly:{name:'Anomaly', price:'$7 / day'},
 };
-const ANOMALY_SLOTS=100; // slots released daily — enforced by backend at launch
+const ANOMALY_SLOTS=100; // slots capped per rolling 24h — server-side enforcement activates when the backend hosts
 // ==== Payments (Solana Pay + on-chain verification) ====
 // Set PAYMENTS.treasury to your treasury wallet address to go live.
 // Until then, checkout shows an honest "not configured" state — no fake charges.
@@ -1079,17 +1098,45 @@ const ChatModule={
   cur:'floor',
   KEY:'haunt_chat_v1',
   RX:['🔥','⛏','👀'],
+  drafts:{},   // per-channel composer drafts, session-only (scoped on switch)
+  rxOpen:{},   // msgId -> true: reaction picker expanded this session
+  vvOn:false,  // visualViewport keyboard handling armed
   load(){ try{ const d=JSON.parse(localStorage.getItem(this.KEY)||'{}');
     return (d&&typeof d==='object'&&!Array.isArray(d))?d:{}; }catch(_){ return {}; } },
-  save(d){ try{ localStorage.setItem(this.KEY, JSON.stringify(d)); }catch(_){} },
+  save(d){ try{ localStorage.setItem(this.KEY, JSON.stringify(d)); return true; }catch(_){ return false; } },
   chan(){ return this.channels.find(c=>c.id===this.cur)||this.channels[0]; },
+  /* Stored data is UNTRUSTED: every message is validated + coerced before it
+     can render. Bad entries are dropped — never thrown on, never rendered raw,
+     and no stored field reaches HTML without escaping or numeric coercion. */
+  cleanRx(rx){
+    const out={};
+    if(rx&&typeof rx==='object'&&!Array.isArray(rx)) for(const e of this.RX){
+      const n=Math.floor(Number(rx[e]));
+      if(Number.isFinite(n)&&n>0) out[e]=n;
+    }
+    return out;
+  },
+  cleanMsg(m){
+    if(!m||typeof m!=='object'||Array.isArray(m)) return null;
+    const id=(typeof m.id==='string'||typeof m.id==='number')?String(m.id).replace(/[^a-zA-Z0-9_-]/g,''):'';
+    if(!id) return null;
+    let txt=(typeof m.txt==='string')?m.txt:(typeof m.txt==='number'||typeof m.txt==='boolean')?String(m.txt):'';
+    txt=txt.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g,''); // strip unpaired surrogates
+    const name=(typeof m.name==='string'&&m.name.trim())?m.name:'anon.skr';
+    const av=(typeof m.av==='string'&&m.av&&[...m.av].length<=4)?m.av:'👻';
+    const t=(typeof m.t==='number'&&Number.isFinite(m.t)&&m.t>0)?m.t:null;
+    const me=this.RX.includes(m.me)?m.me:null;
+    return {id,t,name,av,txt,rx:this.cleanRx(m.rx),me};
+  },
+  cleanList(raw){ if(!Array.isArray(raw)) return []; const out=[];
+    for(const m of raw){ const c=this.cleanMsg(m); if(c) out.push(c); } return out; },
   identity(){
     const c=(typeof cmpLoad==='function')?cmpLoad():null;
     if(c&&c.trait&&CMP_TRAITS[c.trait]){ const T=CMP_TRAITS[c.trait];
       return {name:T.name.toLowerCase()+'.skr', av:T.icon, hatched:true}; }
     return {name:'you.skr', av:'👻', hatched:false};
   },
-  msgs(ch){ const d=this.load(); return Array.isArray(d[ch])?d[ch]:[]; },
+  msgs(ch){ const d=this.load(); return this.cleanList(d[ch]); },
   feed(){
     // real anomaly signals as system messages, oldest -> newest, latest 30
     try{
@@ -1103,83 +1150,143 @@ const ChatModule={
       });
     }catch(_){ return []; }
   },
+  feedTotal(){ try{ return AnomalyModule.signals().length; }catch(_){ return 0; } },
+  noteOff(){ try{ return localStorage.getItem(this.KEY+'_note')==='1'; }catch(_){ return false; } },
+  hideNote(){ try{ localStorage.setItem(this.KEY+'_note','1'); }catch(_){}
+    const n=$('chatNote'); if(n) n.classList.add('hidden'); },
+  draft(){ const inp=$('chatInput'); if(inp) this.drafts[this.cur]=inp.value; },
+  go(id){ if(id===this.cur) return; this.cur=id; this.render(); },
+  note(msg, isErr){ const e=$('chatErr'); if(!e) return;
+    e.textContent=msg; e.classList.toggle('hint', !isErr); e.classList.remove('hidden');
+    clearTimeout(this._noteT);
+    if(!isErr) this._noteT=setTimeout(()=>{ e.classList.add('hidden'); }, 2400); },
+  hideErr(){ const e=$('chatErr'); if(e) e.classList.add('hidden'); clearTimeout(this._noteT); },
+  fadeCheck(){ const w=$('chatChWrap'), c=$('chatChips'); if(!w||!c) return;
+    w.classList.toggle('more', c.scrollWidth>c.clientWidth+4 && c.scrollLeft<c.scrollWidth-c.clientWidth-8);
+    if(!c.dataset.fadeBound){ c.dataset.fadeBound='1';
+      c.addEventListener('scroll',()=>this.fadeCheck(),{passive:true}); } },
+  watchVV(){ if(this.vvOn||!window.visualViewport) return; this.vvOn=true;
+    const vv=window.visualViewport;
+    vv.addEventListener('resize',()=>{ try{
+      const comp=$('chatComposer'); if(!comp||comp.classList.contains('hidden')) return;
+      const kb=Math.max(0, Math.round(window.innerHeight-vv.height-(vv.offsetTop||0)));
+      if(kb>60){ comp.style.bottom=kb+'px'; // overlay keyboard: composer rides above it
+        setTimeout(()=>window.scrollTo(0, document.body.scrollHeight), 60); }
+      else comp.style.bottom=''; // layout-resizing shell: the fixed default already tracks
+    }catch(_){} }); },
   render(){
-    const chips=$('chatChips'), who=$('chatWho'); if(!chips) return;
-    chips.innerHTML=this.channels.map(c=>
-      `<button class="chip${c.id===this.cur?' on':''}" onclick="ChatModule.cur='${c.id}';ChatModule.render()">${c.name}</button>`).join('');
-    const idn=this.identity();
-    who.innerHTML=idn.hatched
-      ? `Posting as <b>${esc(idn.name)}</b> ${idn.av} · +2 companion XP per message (max +10/day)`
-      : `Posting as <b>you.skr</b> 👻 · <a href="#" onclick="show('t-ghost');return false" style="color:var(--gold)">hatch your ghost</a> to name your handle`;
-    this.renderList();
-    const comp=$('chatComposer');
-    if(comp){ comp.classList.toggle('hidden', !this.chan().post);
-      const inp=$('chatInput'); if(inp) inp.placeholder='Message '+this.chan().name; }
+    const chips=$('chatChips'); if(!chips) return;
+    try{
+      const idn=this.identity();
+      const who=idn.hatched
+        ? `<span class="chat-who">Posting as <b>${esc(idn.name)}</b> ${idn.av} · +2 XP/msg (max +10/day)</span>`
+        : `<span class="chat-who">Posting as <b>you.skr</b> 👻 · <a href="#" onclick="show('t-ghost');return false" style="color:var(--gold)">hatch your ghost</a></span>`;
+      chips.innerHTML=this.channels.map(c=>
+        `<button class="chip${c.id===this.cur?' on':''}" onclick="ChatModule.go('${c.id}')">${c.name}</button>`).join('')+who;
+      const note=$('chatNote'); if(note) note.classList.toggle('hidden', this.noteOff());
+      this.renderList();
+      const comp=$('chatComposer');
+      if(comp){ comp.classList.toggle('hidden', !this.chan().post);
+        const inp=$('chatInput'); if(inp){ inp.placeholder='Message '+this.chan().name;
+          inp.value=this.drafts[this.cur]||''; } }
+      this.watchVV();
+      this.fadeCheck();
+    }catch(_){ // a broken store must never brick the tab
+      const el=$('chatList'); if(el) el.innerHTML=`<div class="chat-empty">🦇<br>The floor glitched — your stored messages could not be read.</div>`;
+      const comp=$('chatComposer'); if(comp) comp.classList.toggle('hidden', !this.chan().post);
+    }
   },
   renderList(){
     const el=$('chatList'); if(!el) return;
-    const ch=this.chan();
-    if(!ch.post){
-      const f=this.feed();
-      el.innerHTML=(f.length?f.map(m=>this.msgHTML(m,true)).join('')
-        : `<div class="chat-empty">⚡<br>No signals scored yet.</div>`)
-        +`<div class="chat-empty" style="padding:10px 16px 0">⚡ System feed — tap a signal to open the round. Read-only.</div>`;
-      return;
+    try{
+      const ch=this.chan();
+      if(!ch.post){
+        const f=this.feed(); const total=this.feedTotal()||f.length;
+        el.innerHTML=(f.length?f.map(m=>this.msgHTML(m,true)).join('')
+          : `<div class="chat-empty">⚡<br>No signals scored yet.</div>`)
+          +`<div class="chat-empty" style="padding:10px 16px 0">⚡ Latest ${f.length} of ${total} signals — tap a signal to open the round. Read-only.</div>`;
+        return;
+      }
+      const ms=this.msgs(ch.id);
+      el.innerHTML=ms.length?ms.map((m,i)=>this.msgHTML(m,false,i)).join('')
+        : `<div class="chat-empty">🦇<br>Nothing here yet — the first voice on the floor is yours.</div>`;
+    }catch(_){
+      el.innerHTML=`<div class="chat-empty">🦇<br>The floor glitched — your stored messages could not be read.</div>`;
     }
-    const ms=this.msgs(ch.id);
-    el.innerHTML=ms.length?ms.map(m=>this.msgHTML(m,false)).join('')
-      : `<div class="chat-empty">🦇<br>Nothing here yet — the first voice on the floor is yours.</div>`;
   },
-  msgHTML(m, feed){
+  msgHTML(m, feed, idx){
     const idn=this.identity();
     const mid=String(m.id||'').replace(/[^a-zA-Z0-9_-]/g,'');
     const mine=!feed&&m.name===idn.name;
-    const timeLbl=feed
-      ? (m.t?(m.est?'~':'')+fmtT(m.t).slice(0,5):'')
-      : (m.t?new Date(m.t).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}):'');
-    const rx=feed?'':`<div class="chat-rx">${this.RX.map(e=>{
-      const n=(m.rx&&m.rx[e])||0;
+    let timeLbl='';
+    if(feed) timeLbl=m.t?(m.est?'~':'')+fmtT(m.t).slice(0,5):'';
+    else if(m.t){ const dt=new Date(m.t); if(!isNaN(dt)) timeLbl=dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}); }
+    // Counts arrive coerced via cleanMsg; coerce again here so no stored value
+    // can ever reach the HTML raw (the reaction-count XSS hole stays shut).
+    const cnt=e=>{ const n=Math.floor(Number(m.rx&&m.rx[e])); return Number.isFinite(n)&&n>0?n:0; };
+    const hasRx=!feed&&this.RX.some(e=>cnt(e)>0);
+    const rx=(feed||(!hasRx&&!this.rxOpen[mid]))?'':`<div class="chat-rx">${this.RX.map(e=>{
+      const n=cnt(e);
       return `<button class="rx-chip${m.me===e?' on':''}" onclick="ChatModule.toggleRx('${mid}','${e}')">${e}${n?' '+n:''}</button>`;}).join('')}</div>`;
-    const del=(!feed&&mine)?`<button class="chat-del" onclick="ChatModule.del('${mid}')" aria-label="Delete message">✕</button>`:'';
+    const rxadd=(!feed&&!hasRx&&!this.rxOpen[mid])
+      ? `<button class="chat-rxadd" onclick="ChatModule.openRx('${mid}')" aria-label="Add reaction">＋</button>`:'';
+    const del=(!feed&&mine)?`<button class="chat-del" data-idx="${idx==null?'':idx}" onclick="ChatModule.del('${mid}',this.dataset.idx)" aria-label="Delete message">✕</button>`:'';
+    const ctl=(rxadd||del)?`<span class="chat-ctl">${rxadd}${del}</span>`:'';
     const click=feed?` onclick="showIntel('explore');roundDetail(${m.r})"`:'';
     return `<div class="chat-msg${feed?' feed':''}"${click}>
-      <div class="chat-av">${esc(m.av||'👻')}</div>
+      <div class="chat-av">${esc(typeof m.av==='string'&&m.av?m.av:'👻')}</div>
       <div class="chat-body">
         <div class="chat-meta"><span class="chat-name${feed?' sys':mine?' mine':''}">${esc(m.name||'anon.skr')}</span>`
-        +(timeLbl?`<span class="chat-time">${timeLbl}</span>`:'')+del+(feed?`<span style="margin-left:auto;color:var(--faint);font-size:20px;line-height:1">›</span>`:'')+`</div>
+        +(timeLbl?`<span class="chat-time">${timeLbl}</span>`:'')+ctl+(feed?`<span style="margin-left:auto;color:var(--faint);font-size:20px;line-height:1">›</span>`:'')+`</div>
         <div class="chat-txt">${esc(m.txt||'')}</div>${rx}
       </div></div>`;
   },
+  openRx(id){ this.rxOpen[id]=true; this.renderList(); },
   send(){
     const inp=$('chatInput'); if(!inp) return;
-    const txt=inp.value.trim(); if(!txt) return;
     const ch=this.chan(); if(!ch.post) return;
+    const raw=inp.value, txt=raw.trim();
+    if(!txt){ // whitespace-only: visible feedback instead of a mute no-op
+      if(raw){ inp.classList.remove('chat-shake'); void inp.offsetWidth; inp.classList.add('chat-shake');
+        this.note('Nothing to send — whitespace does not count. Type a message first. 👻', false); }
+      return; }
     const idn=this.identity();
-    const d=this.load(); if(!Array.isArray(d[ch.id])) d[ch.id]=[];
-    d[ch.id].push({id:'m'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36), t:Date.now(), name:idn.name, av:idn.av, txt:txt.slice(0,500), rx:{}, me:null});
-    if(d[ch.id].length>200) d[ch.id]=d[ch.id].slice(-200);
+    const d=this.load(); const list=this.cleanList(d[ch.id]);
+    const cps=[...txt]; // cap by code POINTS — truncation never splits an emoji
+    list.push({id:'m'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36), t:Date.now(), name:idn.name, av:idn.av, txt:cps.length>500?cps.slice(0,500).join(''):txt, rx:{}, me:null});
+    d[ch.id]=list.length>200?list.slice(-200):list;
     // companion XP: +2 per message, capped +10/day (anti-farm)
     const today=new Date().toDateString();
-    if(!d.meta||d.meta.day!==today) d.meta={day:today, xp:0};
+    if(!d.meta||typeof d.meta!=='object'||Array.isArray(d.meta)||d.meta.day!==today) d.meta={day:today, xp:0};
+    if(typeof d.meta.xp!=='number'||!(d.meta.xp>=0)) d.meta.xp=0;
     if(d.meta.xp<10){ d.meta.xp+=2; if(typeof cmpXP==='function') cmpXP(2); }
-    this.save(d);
-    inp.value='';
+    if(!this.save(d)){ // storage full/denied: the words stay in the box, error shows
+      this.note('Could not save — this device\u2019s storage is full. Your message is still in the box: free up space, then send again.', true);
+      window.scrollTo(0, document.body.scrollHeight);
+      return; }
+    this.hideErr();
+    this.drafts[ch.id]=''; inp.value='';
     this.renderList();
     window.scrollTo(0, document.body.scrollHeight);
   },
   toggleRx(id, e){
     const ch=this.chan(); if(!ch.post) return;
-    const d=this.load(); const ms=Array.isArray(d[ch.id])?d[ch.id]:[];
-    const m=ms.find(x=>x.id===id); if(!m) return;
+    const d=this.load(); const list=this.cleanList(d[ch.id]);
+    const m=list.find(x=>x.id===id); if(!m) return;
     m.rx=m.rx||{};
     if(m.me===e){ m.rx[e]=Math.max(0,(m.rx[e]||0)-1); if(!m.rx[e]) delete m.rx[e]; m.me=null; }
     else{ if(m.me){ m.rx[m.me]=Math.max(0,(m.rx[m.me]||0)-1); if(!m.rx[m.me]) delete m.rx[m.me]; } m.rx[e]=(m.rx[e]||0)+1; m.me=e; }
+    d[ch.id]=list;
     this.save(d); this.renderList();
   },
-  del(id){
+  del(id, idx){
     const ch=this.chan(); if(!ch.post) return;
-    const d=this.load(); if(!Array.isArray(d[ch.id])) return;
-    d[ch.id]=d[ch.id].filter(x=>x.id!==id);
+    const d=this.load(); const list=this.cleanList(d[ch.id]);
+    let i=(idx===''||idx==null)?-1:parseInt(idx,10);
+    if(!(i>=0&&i<list.length&&list[i].id===id)) i=list.findIndex(x=>x.id===id);
+    if(i<0) return;
+    list.splice(i,1); // exactly ONE message — even when another shares the id
+    d[ch.id]=list;
     this.save(d); this.renderList();
   },
 };
@@ -1189,6 +1296,8 @@ const PAYMENTS={
   backend:null, // haunt-backend base URL (e.g. 'https://api.example.com') — set to verify payments server-side; null = on-device verification as before
   oreMint:'oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp', // ORE (current mint, 11 dp) — re-verify before going live
   oreDecimals:11,
+  skrMint:'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3', // SKR (Seeker ecosystem token, 6 dp) — triple-verified 2026-10-12: Solana Mobile docs + Jupiter verified registry
+  skrDecimals:6,
   rpc:'https://api.mainnet-beta.solana.com',
   usd:{day:1, monthly:5, lifetime:50, anomaly:7},
   durMs:{day:864e5, monthly:30*864e5, lifetime:0, anomaly:864e5}, // 0 = never expires
@@ -1219,6 +1328,17 @@ async function orePrice(){
     _oreUsd=e&&e.usdPrice||0;
   }catch(_){}
   return _oreUsd; // 0 = unavailable — no invented fallback for ORE
+}
+let _skrUsd=0;
+async function skrPrice(){
+  if(_skrUsd>0) return _skrUsd;
+  try{
+    const r=await fetch('https://lite-api.jup.ag/price/v3?ids='+PAYMENTS.skrMint);
+    const j=await r.json();
+    const e=j[PAYMENTS.skrMint];
+    _skrUsd=e&&e.usdPrice||0;
+  }catch(_){}
+  return _skrUsd; // 0 = unavailable — no invented fallback for SKR
 }
 function payLoad(){ try{ return JSON.parse(localStorage.getItem('haunt_purchases')||'{}'); }catch(_){ return {}; } }
 function paySave(p){ try{ localStorage.setItem('haunt_purchases', JSON.stringify(p)); }catch(_){} }
@@ -1336,7 +1456,7 @@ if(!Entitlements.can('fullboard')) el.insertAdjacentHTML('beforeend','<div class
 }catch(e){ el.innerHTML='<div class="note">Leaderboard unavailable.</div>'; }}
 renderLeaderboard();
 // ==== Checkout ====
-let _payTier='day', _paySol=0, _payCur='SOL', _payOre=0;
+let _payTier='day', _paySol=0, _payCur='SOL', _payOre=0, _paySkr=0;
 // In-flight guard for the pay buttons: while a quote/pay request is in
 // flight, further taps are ignored and the checkout's buttons are
 // disabled — a double-tap must not fire two backend quotes (for the
@@ -1356,12 +1476,15 @@ async function renderPayTiers(){
   const b=$('payBody'); if(!b) return;
   const rate=await solPrice();
   const oreRate=_payCur==='ORE'?await orePrice():0;
+  const skrRate=_payCur==='SKR'?await skrPrice():0;
   const tiers=['day','monthly','lifetime','anomaly'];
   const oreOk=_payCur!=='ORE'||oreRate>0;
-  const amt=t=>_payCur==='ORE'?(oreRate>0?(PAYMENTS.usd[t]/oreRate):null):(PAYMENTS.usd[t]/rate);
+  const skrOk=_payCur!=='SKR'||skrRate>0;
+  const amt=t=>_payCur==='ORE'?(oreRate>0?(PAYMENTS.usd[t]/oreRate):null):_payCur==='SKR'?(skrRate>0?(PAYMENTS.usd[t]/skrRate):null):(PAYMENTS.usd[t]/rate);
   b.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:12px">`
   +`<button class="chip${_payCur==='SOL'?' on':''}" style="flex:1;min-height:44px" onclick="_payCur='SOL';renderPayTiers()">◎ SOL</button>`
-  +`<button class="chip${_payCur==='ORE'?' on':''}" style="flex:1;min-height:44px" onclick="_payCur='ORE';renderPayTiers()">⛏ ORE</button></div>`
+  +`<button class="chip${_payCur==='ORE'?' on':''}" style="flex:1;min-height:44px" onclick="_payCur='ORE';renderPayTiers()">⛏ ORE</button>`
+  +`<button class="chip${_payCur==='SKR'?' on':''}" style="flex:1;min-height:44px" onclick="_payCur='SKR';renderPayTiers()">💎 SKR</button></div>`
   +tiers.map(t=>{
     const a=amt(t);
     const sub=t==='anomaly'?' · 100 slots/day':t==='lifetime'?' · one payment':t==='monthly'?' · all features':' · all features';
@@ -1371,12 +1494,14 @@ async function renderPayTiers(){
   }).join('')
   +(!PAYMENTS.treasury
     ? `<div class="note" style="margin-top:12px">Payments aren't configured in this build yet — no charge will happen. Set <b>PAYMENTS.treasury</b> in the source to go live.</div>`
-    : !oreOk
-    ? `<div class="note" style="margin-top:12px">Couldn't fetch the ORE price just now — switch to SOL or try again in a moment.</div>`
+    : (!oreOk||!skrOk)
+    ? `<div class="note" style="margin-top:12px">Couldn't fetch the ${_payCur} price just now — switch to SOL or try again in a moment.</div>`
     : `<button class="btn" style="width:100%;margin-top:12px" onclick="payNow()">Pay ${amt(_payTier).toFixed(4)} ${_payCur}</button>
        <div class="fineprint" style="margin-top:8px">Opens your Solana wallet. We verify the payment on-chain before unlocking.</div>`)
   +(_payCur==='ORE'
     ? (oreRate>0?`<div class="fineprint" style="margin-top:8px">Pay with what you mine · 1 ORE ≈ $${oreRate.toFixed(2)} (live rate)</div>`:`<div class="fineprint" style="margin-top:8px">Pay with what you mine · ORE price unavailable right now.</div>`)
+    : _payCur==='SKR'
+    ? (skrRate>0?`<div class="fineprint" style="margin-top:8px">The Seeker ecosystem token · 1 SKR ≈ $${skrRate.toFixed(4)} (live rate)</div>`:`<div class="fineprint" style="margin-top:8px">The Seeker ecosystem token · SKR price unavailable right now.</div>`)
     : `<div class="fineprint" style="margin-top:8px">1 SOL ≈ $${rate.toFixed(0)} (${_solLive?'live rate':'estimate'})</div>`);
 }
 // ==== haunt-backend quotes (opt-in via PAYMENTS.backend) ====
@@ -1416,6 +1541,7 @@ function payNow(){
   if(!PAYMENTS.treasury) return;
   if(_payInFlight) return; // a quote/pay request is already in flight
   if(_payCur==='ORE'){ payNowOre(); return; }
+  if(_payCur==='SKR'){ payNowSkr(); return; }
   _payBusy(true);
   (async()=>{
     try{
@@ -1477,6 +1603,37 @@ async function payNowOre(){
   location.href=url;
   } finally { _payBusy(false); } // re-enable on EVERY exit path
 }
+async function payNowSkr(){
+  if(!PAYMENTS.treasury) return;
+  if(_payInFlight) return; // a quote/pay request is already in flight
+  _payBusy(true);
+  try{
+  let amt=null, memo=null, req=null;
+  const q=await backendQuote(_payTier,'SKR');
+  if(q&&q.soldOut){
+    if(_payTier==='anomaly'){ paySoldOut(q.next_free_at); return; }
+    // sold_out is anomaly-only server-side; anything else falls back.
+  } else if(q){ amt=q.amount; memo=q.memo; req=q.request_id; }
+  if(amt===null){
+    const rate=await skrPrice();
+    if(!(rate>0)){ renderPayTiers(); return; }
+    amt=PAYMENTS.usd[_payTier]/rate;
+    memo=`haunt:${_payTier}:${Date.now()}`;
+  }
+  _paySkr=amt;
+  const pend={tier:_payTier, cur:'SKR', amt, memo, t:Date.now()};
+  if(req){ pend.backend=true; pend.req=req; }
+  try{ sessionStorage.setItem('haunt_pending', JSON.stringify(pend)); }catch(_){}
+  const url=`solana:${PAYMENTS.treasury}?amount=${amt.toFixed(6)}&spl-token=${PAYMENTS.skrMint}&memo=${encodeURIComponent(memo)}&label=${encodeURIComponent('ORE HAUNT')}`;
+  const b=$('payBody');
+  b.innerHTML=`<div style="text-align:center;padding:8px 0">`
+  +`<div style="font-size:40px;margin-bottom:12px">💎</div>`
+  +`<p style="font-size:15px;line-height:1.7">Opening your wallet…<br>Approve <b>${amt.toFixed(4)} SKR</b> for <b>${TIERS[_payTier].name}</b>.</p>`
+  +`<button class="btn" style="width:100%;margin-top:12px" onclick="verifyPay()">I've paid — verify</button>`
+  +`<button class="btn-ghost" style="width:100%;margin-top:8px" onclick="renderPayTiers()">← Back</button></div>`;
+  location.href=url;
+  } finally { _payBusy(false); } // re-enable on EVERY exit path
+}
 async function rpc(method, params){
   const r=await fetch(PAYMENTS.rpc,{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});
@@ -1487,7 +1644,9 @@ async function verifyPay(){
   let pend=null; try{ pend=JSON.parse(sessionStorage.getItem('haunt_pending')||'null'); }catch(_){}
   const okTiers=['day','monthly','lifetime','anomaly'];
   const isOre=pend&&pend.cur==='ORE';
-  if(!pend||!PAYMENTS.treasury||okTiers.indexOf(pend.tier)<0||!(isOre?pend.amt>0:pend.sol>0)){ b.innerHTML='<div class="note">No pending payment found. Try again.</div>'; return; }
+  const isSkr=pend&&pend.cur==='SKR';
+  const isTok=isOre||isSkr;
+  if(!pend||!PAYMENTS.treasury||okTiers.indexOf(pend.tier)<0||!(isTok?pend.amt>0:pend.sol>0)){ b.innerHTML='<div class="note">No pending payment found. Try again.</div>'; return; }
   b.innerHTML='<div class="note" style="text-align:center">Checking the chain…</div>';
   try{
     const sigs=await rpc('getSignaturesForAddress',[PAYMENTS.treasury,{limit:20}]);
@@ -1524,15 +1683,20 @@ async function verifyPay(){
       const tx=await rpc('getTransaction',[s.signature,{maxSupportedTransactionVersion:0,encoding:'jsonParsed'}]);
       const logs=((tx&&tx.meta&&tx.meta.logMessages)||[]).join('\n');
       if(logs.indexOf(pend.memo)<0) continue;
-      if(isOre){
-        // ORE: verify the treasury's ORE token balance grew by >= expected (base units)
+      if(isTok){
+        // SPL rail (ORE / SKR): verify the treasury's balance OF THE PENDING
+        // PAYMENT'S OWN MINT grew by >= expected (base units). The balance
+        // filter is keyed to the pending currency's mint, so a delta in any
+        // other token (e.g. ORE against an SKR pending) can never verify it.
+        const tokMint=isSkr?PAYMENTS.skrMint:PAYMENTS.oreMint;
+        const tokDec=isSkr?PAYMENTS.skrDecimals:PAYMENTS.oreDecimals;
         let gained=0n;
         try{
-          const bal=(arr)=>(arr||[]).filter(x=>x.mint===PAYMENTS.oreMint&&x.owner===PAYMENTS.treasury)
+          const bal=(arr)=>(arr||[]).filter(x=>x.mint===tokMint&&x.owner===PAYMENTS.treasury)
             .reduce((a,x)=>a+BigInt(x.uiTokenAmount.amount),0n);
           gained=bal(tx.meta.postTokenBalances)-bal(tx.meta.preTokenBalances);
         }catch(_){}
-        const need=BigInt(Math.floor(pend.amt*Math.pow(10,PAYMENTS.oreDecimals)*0.99)); // 1% tolerance
+        const need=BigInt(Math.floor(pend.amt*Math.pow(10,tokDec)*0.99)); // 1% tolerance
         if(gained<need) continue;
       } else {
         // SOL: verify the treasury actually received >= expected lamports in this tx
@@ -1912,8 +2076,8 @@ const _rmap={}; D.replays.replays.forEach(R=>{ _rmap[R.round]=R; });
 function rtime(r){
   const R=_rmap[r.r];
   if(R&&R.timeline[0]) return {t:R.timeline[0].t, real:true}; // real chain time
-  // estimate from round-ID cadence (anchor 431031 @ 2026-10-07T06:57:54Z + 77.5s/round)
-  const ms=Date.parse('2026-10-07T06:57:54Z')+(r.r-431031)*77500;
+  // estimate from round-ID cadence (anchor 438059 @ 2026-10-12T21:08:49Z, real replay time, + 63s/round measured on the live replay span 438052-438059)
+  const ms=Date.parse('2026-10-12T21:08:49Z')+(r.r-438059)*63000;
   return {t:new Date(ms).toISOString(), real:false};
 }
 // ==== AnomalyModule — the self-contained anomaly layer ====
@@ -2003,8 +2167,8 @@ function renderAnomaly(){
     +`<p style="color:var(--dim);font-size:14px;line-height:1.6;margin:0 0 14px">Pot shocks, ghost crowds, whale strikes and flooded tiles — every statistically unusual round, scored and ranked. Not even Lifetime includes this.</p>`
     +`<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">`
     +`<span class="chip" style="cursor:default;border-color:var(--gold-line);color:var(--gold)">$7 / day</span>`
-    +`<span class="chip" style="cursor:default">🔒 ${ANOMALY_SLOTS} slots / day</span></div>`
-    +`<div class="fineprint">Slots release daily and are enforced at launch. Preview with <b>?tier=anomaly</b>.</div></div>`;
+    +`<span class="chip" style="cursor:default">🔒 ${ANOMALY_SLOTS} slots · rolling 24h</span></div>`
+    +`<div class="fineprint">Capped at 100 slots per rolling 24 hours — the cap is client-side in this build; server-side enforcement activates when the backend hosts. Preview with <b>?tier=anomaly</b>.</div></div>`;
     return;
   }
   const all=AnomalyModule.signals();
@@ -2534,6 +2698,7 @@ function daypartOf(iso){
 }
 function pickCard(R,mx){
   const _isWatching=R.round===currentRound&&(typeof ENG!=='undefined')&&ENG;
+  const endMsP=R.timeline&&R.timeline.length?Date.parse(R.timeline[R.timeline.length-1].t):0;
   const t=R.timeline[0]?fmtT(R.timeline[0].t).slice(0,5):'--:--';
   const sol=R.agg?R.agg.d:0;
   const wd=R.timeline[0]?fmtD(R.timeline[0].t,{weekday:'short'}).toUpperCase():'';
@@ -2543,9 +2708,10 @@ function pickCard(R,mx){
     +`<div class="rpick-day"><span class="d">${wd}</span><span class="m">${md}</span></div>`
     +`<div class="rpick-tile"><span class="n">${R.winner}</span><span class="l">WINNER</span></div>`
     +`<div class="rpick-meta"><span>\uD83D\uDD50 ${t}</span><span>${R.deploys} deploys</span></div>`
+    +`<div class="rpick-ago"><span class="ago-el" data-end="${Number.isFinite(endMsP)?endMsP:0}">${Number.isFinite(endMsP)&&endMsP?esc(agoText(endMsP)):''}</span></div>`
     +`<div class="rpick-bar"><i style="width:${Math.round(sol/mx*100)}%"></i></div></div>`;
 }
-// ---- LAST-4 PAGE: elapsed-since-newest-replay timer (text-only, single interval) ----
+// ---- LAST-4 PAGE: elapsed-time labels (header strip + per-card; text-only, single interval) ----
 function agoText(endMs){
   const s=Math.max(0,Math.floor((Date.now()-endMs)/1000));
   const m=Math.floor(s/60);
@@ -2557,9 +2723,9 @@ function agoText(endMs){
 }
 let _agoInt=null, _agoEnd=0;
 function tickAgo(){
-  const el=document.getElementById('lastAgo');
-  if(!el||!_agoEnd){ if(_agoInt){ clearInterval(_agoInt); _agoInt=null; } return; }
-  el.textContent=agoText(_agoEnd);
+  const els=document.querySelectorAll('.ago-el');
+  if(!els.length){ if(_agoInt){ clearInterval(_agoInt); _agoInt=null; } return; }
+  els.forEach(el=>{ const e=+el.getAttribute('data-end'); if(Number.isFinite(e)&&e>0) el.textContent=agoText(e); });
 }
 function durText(R){
   if(!R.timeline||!R.timeline.length) return '\u2014';
@@ -2578,6 +2744,7 @@ function fullCard(R){
   const rn=parseInt(R.round,10), w=parseInt(R.winner,10);
   const watching=rn===currentRound&&(typeof ENG!=='undefined')&&ENG;
   const t0=R.timeline&&R.timeline[0]?R.timeline[0].t:null;
+  const endMs=R.timeline&&R.timeline.length?Date.parse(R.timeline[R.timeline.length-1].t):0;
   const dstr=t0?fmtD(t0,{weekday:'short',month:'short',day:'numeric'}).toUpperCase():'';
   const wd=t0?fmtD(t0,{weekday:'short'}).toUpperCase():'', md=t0?fmtD(t0,{month:'short',day:'numeric'}).toUpperCase():'';
   const tstr=t0?fmtT(t0).slice(0,5)+' '+tzAbbr():'';
@@ -2586,6 +2753,7 @@ function fullCard(R){
   const aria='Replay round '+rn+', '+dstr+', '+tstr+', tile '+w+' won with '+winSol.toFixed(3)+' SOL, '+tot.toFixed(3)+' SOL total, '+mins+' miners, '+R.deploys+' deploys';
   return `<div class="l4-card${rn===currentRound?' on':''}" onclick="openReplay(${rn})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReplay(${rn})}" role="button" tabindex="0" aria-label="${esc(aria)}">`
     +`<div class="l4-head"><span class="l4-round">#${rn}</span>${watching?'<span class="l4-watch">\u25B6 WATCHING</span>':'<span class="l4-play">\u25B6 PLAY</span>'}</div>`
+    +`<div class="l4-ago"><span class="ago-el" data-end="${Number.isFinite(endMs)?endMs:0}">${Number.isFinite(endMs)&&endMs?esc(agoText(endMs)):''}</span></div>`
     +lastBoard(R)
     +`<div class="l4-win"><span class="crown">\uD83C\uDFC6</span><b>TILE ${w}</b><span>\u00B7 ${winSol.toFixed(3)} SOL on it</span></div>`
     +`<div class="l4-stats"><div class="l4-stat"><div class="v">${tot.toFixed(3)}</div> <div class="l">Total SOL</div></div>`
@@ -2603,7 +2771,7 @@ function renderTopPicker(){
   const last4=reps.slice(0,4), earlier=reps.slice(4);
   const mx=Math.max(...reps.map(R=>R.agg?R.agg.d:0),0.000001);
   const endMs=Date.parse(last4[0].timeline[last4[0].timeline.length-1].t);
-  let h=`<div class="l4-timer"><span class="ic">\u23F1</span><span class="tx">Last replay \u00B7 ended</span><b id="lastAgo">\u2014</b></div>`;
+  let h=`<div class="l4-timer"><span class="ic">\u23F1</span><span class="tx">Last replay \u00B7 ended</span><b id="lastAgo" class="ago-el" data-end="${Number.isFinite(endMs)?endMs:0}">\u2014</b></div>`;
   h+='<div class="l4-grid">'+last4.map(fullCard).join('')+'</div>';
   if(earlier.length){
     h+='<div class="reel-label"><span class="t">Earlier replays</span><span class="line"></span></div><div class="rfilm">';
@@ -2623,7 +2791,7 @@ var acol=m==null?'var(--red)':(m>360?'var(--red)':(m>60?'var(--amber)':'var(--gr
 const _rc=(D.rounds&&D.rounds.count)||0;
 $('asof').innerHTML='ORE miner intelligence · top 150 by volume · '+_rc+' rounds · <span style="white-space:nowrap">data <b style="color:'+acol+'">'+age+'</b></span>';}catch(e){}})();
 $('mEvents').textContent=((D.meta&&D.meta.events_funded)||0).toLocaleString()+' funded deploys';
-$('mRounds').textContent=((D.rounds&&D.rounds.count)||0).toLocaleString()+' rounds · ORE V3 program';
+$('mRounds').textContent=((D.rounds&&D.rounds.count)||0).toLocaleString()+' rounds · ORE V4 program';
 let _obS=0;
 function obShow(){ const o=$('onboard'); if(o) o.classList.remove('hidden'); }
 function obHide(){ const o=$('onboard'); if(o) o.classList.add('hidden'); try{localStorage.setItem('haunt_onboarded','1');}catch(_){} }
