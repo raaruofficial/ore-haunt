@@ -6,7 +6,18 @@ ORE HAUNT is the intel layer for ORE miners, built for the Solana Seeker. ORE ro
 
 ## Screenshots
 
-<!-- TODO: add screenshots — MINERS leaderboard, a miner dossier, the Last-4 replay page, a replay mid-playback, ROUNDS explorer -->
+| MINERS leaderboard | Miner dossier |
+|---|---|
+| ![MINERS leaderboard](screenshots/leaderboard.png) | ![Miner dossier](screenshots/dossier.png) |
+
+| Last 4 hauntings (REPLAY) | Replay mid-playback |
+|---|---|
+| ![Last 4 hauntings](screenshots/last4.png) | ![Replay playing](screenshots/replay.png) |
+
+## Pitch deck & demo
+
+- **Pitch deck:** [ORE_HAUNT_CLOCKIN_DECK.pdf](ORE_HAUNT_CLOCKIN_DECK.pdf) (11 slides, in this repo)
+- **Demo video:** produced from the shipped build per [DEMO_SCRIPT.md](DEMO_SCRIPT.md) (filed with the CLOCK IN submission)
 
 ## What's inside
 

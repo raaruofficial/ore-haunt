@@ -39,8 +39,7 @@ All XML parse-verified. If the sibling entries built fine without icons, this ad
 
 ## Owner steps (in order)
 
-1. **Repo**: create the ORE HAUNT CLOCK IN repo (e.g. `raaruofficial/ore-haunt`) — or, if the submission plan folds this into an existing repo, push the contents of this `android/` directory as that repo's root (this directory *is* a repo root: workflow sits at `.github/workflows/` relative to it).
-2. **Push** this directory's contents to `main`.
+1. **Repo**: this directory IS the repo root (workflow at `.github/workflows/` relative to it). The repo is `raaruofficial/ore-haunt` on GitHub — already created and pushed.
 3. **Add the 4 signing secrets** to the repo (Settings → Secrets → Actions), same names as the other entries: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. (Debug APK builds need none of these.)
 4. **Get the APK**: Actions → "Android CI" → download `orehaunt-debug-apk` from the push build for immediate testing/sideload. For the signed release: `git tag v0.1.0 && git push origin v0.1.0`, then download `orehaunt-release-apk`.
 5. **Install on the Seeker**, smoke-test: app opens on the bundled HAUNT, tabs navigate, checkout buttons render (payments verify on-device; backend still null by design).
