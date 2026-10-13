@@ -1,6 +1,6 @@
 package com.orehaunt.app.wallet
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.webkit.JavascriptInterface
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import kotlinx.coroutines.CoroutineScope
@@ -33,11 +33,12 @@ import org.json.JSONObject
  * Seeker's Seed Vault wallet through Mobile Wallet Adapter.
  */
 class OreHauntWalletBridge(
-    private val activity: Activity,
+    private val activity: ComponentActivity,
     private val walletManager: WalletManager,
     private val evaluateJs: (script: String) -> Unit
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val sender = ActivityResultSender(activity)
 
     // ------------------------------------------------------------------
     // Synchronous getters (safe to call any time)
@@ -65,7 +66,7 @@ class OreHauntWalletBridge(
     @JavascriptInterface
     fun connectWallet(requestId: String): String {
         scope.launch {
-            walletManager.connect(ActivityResultSender(activity)).fold(
+            walletManager.connect(sender).fold(
                 onSuccess = { pubkey ->
                     resolveOk(requestId, JSONObject().put("publicKey", pubkey))
                 },
@@ -84,7 +85,7 @@ class OreHauntWalletBridge(
     @JavascriptInterface
     fun signMessage(requestId: String, message: String): String {
         scope.launch {
-            walletManager.signMessage(ActivityResultSender(activity), message).fold(
+            walletManager.signMessage(sender, message).fold(
                 onSuccess = { sig ->
                     resolveOk(requestId, JSONObject().put("signature", sig))
                 },

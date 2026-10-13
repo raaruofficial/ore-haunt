@@ -1,6 +1,6 @@
 package com.orehaunt.app.ui
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +46,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun WalletScreen(navController: NavController) {
     val context = LocalContext.current
-    val activity = context as Activity
+    val activity = context as ComponentActivity
+    val sender = remember { ActivityResultSender(activity) }
     val walletManager = (context.applicationContext as OreHauntApp).walletManager
     val state by walletManager.uiState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -74,7 +76,7 @@ fun WalletScreen(navController: NavController) {
                     Button(
                         onClick = {
                             scope.launch {
-                                walletManager.connect(ActivityResultSender(activity))
+                                walletManager.connect(sender)
                             }
                         },
                         modifier = Modifier.fillMaxWidth(0.8f).height(52.dp)
@@ -109,7 +111,7 @@ fun WalletScreen(navController: NavController) {
                         onClick = {
                             scope.launch {
                                 walletManager.signMessage(
-                                    ActivityResultSender(activity),
+                                    sender,
                                     "ORE HAUNT sign-in"
                                 )
                             }
@@ -119,7 +121,7 @@ fun WalletScreen(navController: NavController) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = {
-                            scope.launch { walletManager.disconnect(ActivityResultSender(activity)) }
+                            scope.launch { walletManager.disconnect(sender) }
                         },
                         modifier = Modifier.fillMaxWidth(0.8f).height(52.dp)
                     ) { Text("DISCONNECT") }
@@ -132,7 +134,7 @@ fun WalletScreen(navController: NavController) {
                     Button(
                         onClick = {
                             scope.launch {
-                                walletManager.connect(ActivityResultSender(activity))
+                                walletManager.connect(sender)
                             }
                         },
                         modifier = Modifier.fillMaxWidth(0.8f).height(52.dp)
