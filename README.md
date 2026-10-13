@@ -12,7 +12,7 @@ ORE HAUNT is the intel layer for ORE miners, built for the Solana Seeker. ORE ro
 
 | Last 4 hauntings (REPLAY) | Replay mid-playback |
 |---|---|
-| ![Last 4 hauntings](screenshots/last4.png) | ![Replay playing](screenshots/replay.png) |
+| ![Replay player](screenshots/player.png) | ![Replay playing](screenshots/replay.png) |
 
 ## Pitch deck & demo
 
